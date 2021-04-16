@@ -2,13 +2,17 @@ package com.damonkelley.accountant.budget
 
 import com.damonkelley.accountant.eventsourcing.AggregateRoot
 import com.damonkelley.accountant.eventsourcing.Handler
+import com.damonkelley.accountant.eventsourcing.Repository
 
 import java.util.UUID
 
 
-class CreateBudgetHandler : Handler<CreateBudget, BudgetEvent> {
-    override fun handle(command: CreateBudget): Budget {
-        return Budget.create(command.name)
+class CreateBudgetHandler(val repository: Repository<Budget>) : Handler<CreateBudget> {
+    override fun handle(command: CreateBudget): Result<Unit> {
+        Budget.create(command.name)
+                .let { repository.save(it) }
+
+        return Result.success(Unit)
     }
 }
 
@@ -17,7 +21,7 @@ class Budget(
         facts: List<BudgetEvent> = emptyList(),
         override val changes: List<BudgetEvent> = emptyList()
 ) : AggregateRoot<BudgetEvent> {
-    lateinit var name: String
+    private lateinit var name: String
 
     // TODO: How could this be refactored to be immutable?
     init {
@@ -34,14 +38,14 @@ class Budget(
 
     companion object {
         fun create(name: String): Budget {
-            val event = BudgetCreated(UUID.randomUUID(), name)
-            return Budget(event.id, changes = listOf(event))
+            val event = BudgetCreated(name)
+            return Budget(UUID.randomUUID(), changes = listOf(event))
         }
     }
 }
 
 sealed class BudgetEvent
-data class BudgetCreated(val id: UUID, val name: String) : BudgetEvent()
+data class BudgetCreated(val name: String) : BudgetEvent()
 
 sealed class BudgetCommands
 data class CreateBudget(val name: String) : BudgetCommands()

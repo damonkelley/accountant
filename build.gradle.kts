@@ -25,7 +25,7 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
-
+    testImplementation("com.natpryce:hamkrest:1.8.0.1")
 }
 
 tasks.test {
@@ -37,6 +37,7 @@ tasks.withType<KotlinCompile> {
 
     kotlinOptions {
         useIR = true
+        freeCompilerArgs = freeCompilerArgs + "-Xallow-result-return-type"
     }
 }
 
