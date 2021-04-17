@@ -1,13 +1,14 @@
-import com.damonkelley.accountant.budget.Budget
-import com.damonkelley.accountant.budget.BudgetCreated
-import com.damonkelley.accountant.budget.BudgetEvent
-import com.damonkelley.accountant.budget.CreateBudget
-import com.damonkelley.accountant.budget.CreateBudgetHandler
+import com.damonkelley.accountant.budget.domain.Budget
+import com.damonkelley.accountant.budget.domain.BudgetEvent
+import com.damonkelley.accountant.budget.domain.CreateBudget
+import com.damonkelley.accountant.budget.application.CreateBudgetHandler
+import com.damonkelley.accountant.eventsourcing.Recordable
+import com.damonkelley.accountant.eventsourcing.RecordableProvider
 import com.damonkelley.accountant.eventsourcing.Repository
-import com.natpryce.hamkrest.Matcher
+import com.damonkelley.accountant.eventsourcing.Command
+import com.damonkelley.accountant.eventsourcing.Context
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.hasElement
+import com.natpryce.hamkrest.isEmpty
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -15,37 +16,42 @@ import kotlin.test.assertEquals
 class CreateBudgetHandlerTest {
     @Test
     fun `it returns a result`() {
-        val actual = CreateBudgetHandler(InMemoryBudgetRepository())
-                .handle( CreateBudget(name = "A new budget"))
+        val context = Context(UUID.randomUUID(), "stream")
+        val actual = CreateBudgetHandler(InMemoryBudgetRepository(), Recording())
+                .handle(Command(context) { CreateBudget(name = "A new budget") })
 
         assertEquals(Result.success(Unit), actual)
     }
 
     @Test
     fun `it creates the budget`() {
+        val context = Context(UUID.randomUUID(), "stream")
         val repository = InMemoryBudgetRepository()
-        CreateBudgetHandler(repository)
-                .handle(CreateBudget(name = "A new budget"))
+        CreateBudgetHandler(repository, Recording())
+                .handle(Command(context) { CreateBudget(name = "A new budget") })
 
-        assertThat(repository.db, hasEvent(BudgetCreated("A new budget")))
+        val isNotEmpty = isEmpty.not()
+
+        assertThat(repository.saved, isNotEmpty)
     }
 }
 
-fun hasEvent(event: BudgetEvent) : Matcher<Map<UUID, List<BudgetEvent>>>  {
-    return has("an event", { it.values.flatten() }, hasElement(event))
-}
-
 class InMemoryBudgetRepository: Repository<Budget> {
-    val db = mutableMapOf<UUID, List<BudgetEvent>>()
+    val saved = mutableListOf<Budget>()
 
     override fun load(id: UUID): Budget? {
         TODO("Not yet implemented")
     }
 
     override fun save(budget: Budget): Result<Budget> {
-        db[budget.id] = budget.changes
-
+        saved.add(budget)
         return Result.success(budget)
     }
 }
 
+class Recording: RecordableProvider<BudgetEvent>, Recordable<BudgetEvent> {
+    override fun record(event: BudgetEvent): Recordable<BudgetEvent> = this
+    override fun replayChanges(apply: (BudgetEvent) -> Unit) = this
+    override fun replayFacts(apply: (BudgetEvent) -> Unit) = this
+    override fun from(context: Context): Recordable<BudgetEvent> = this
+}
