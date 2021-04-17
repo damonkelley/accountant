@@ -1,4 +1,4 @@
-package com.damonkelley.accountant.eventsourcing
+package com.damonkelley.accountant.infrastructure
 
 import java.util.UUID
 

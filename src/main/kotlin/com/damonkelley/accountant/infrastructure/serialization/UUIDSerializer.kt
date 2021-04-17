@@ -1,3 +1,5 @@
+package com.damonkelley.accountant.infrastructure.serialization
+
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.encoding.Decoder

@@ -26,6 +26,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
     testImplementation("com.natpryce:hamkrest:1.8.0.1")
+    testImplementation("io.mockk:mockk:1.11.0")
 }
 
 tasks.test {
