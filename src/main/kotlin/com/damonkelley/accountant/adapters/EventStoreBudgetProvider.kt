@@ -5,77 +5,70 @@ import com.damonkelley.accountant.budget.application.NewBudgetProvider
 import com.damonkelley.accountant.budget.domain.Budget
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
-import com.damonkelley.accountant.eventsourcing.SimpleAggregateRoot
-import com.damonkelley.common.result.extensions.combine
-import com.damonkelley.common.result.extensions.flatMap
+import com.damonkelley.accountant.eventsourcing.EventStore
+import com.damonkelley.accountant.infrastructure.eventstore.EventSerializer
+import com.damonkelley.accountant.infrastructure.eventstore.EventStoreAggregateRootProvider
+import com.damonkelley.accountant.infrastructure.eventstore.EventStoreEventMapper
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
-interface EventStore {
-    data class Event(
-        val eventType: String,
-        val body: String,
-    )
-
-    fun load(stream: String): Result<Collection<Event>>
-    fun append(stream: String, events: Collection<Event>): Result<Unit>
-}
-
-class EventStoreBudgetProvider(private val eventStore: EventStore, val UUIDProvider: () -> UUID = UUID::randomUUID) :
+class EventStoreBudgetProvider(private val provider: EventStoreAggregateRootProvider<BudgetEvent, Budget>) :
     NewBudgetProvider,
     ExistingBudgetProvider {
+    constructor(eventStore: EventStore, UUIDProvider: () -> UUID = UUID::randomUUID) : this(
+        EventStoreAggregateRootProvider(
+            eventStore = eventStore,
+            category = "budget",
+            construct = ::Budget,
+            mapper = BudgetEventMapper(BudgetEventSerializer()),
+            UUIDProvider = UUIDProvider,
+        )
+    )
+
     override fun new(block: (Budget) -> Budget): Result<Unit> {
-        val aggregateRoot = SimpleAggregateRoot<BudgetEvent>(UUIDProvider(), emptyList())
-
-        block(Budget(aggregateRoot))
-
-        return aggregateRoot.changes()
-            .map { event -> event.asEventStoreEvent() }
-            .combine()
-            .flatMap { eventStore.append("budget-${aggregateRoot.id}", it) }
+        return provider.new(block)
     }
 
     override fun load(id: UUID, block: (Budget?) -> Budget?): Result<Unit> {
-        return eventStore.load("budget-$id")
-            .map { it.map { event -> BudgetEventSerializer().deserialize(event.eventType, event.body).getOrThrow() } }
-            .map { SimpleAggregateRoot<BudgetEvent>(id, emptyList()) }
-            .map { block(Budget(it)).run { it.changes() } }
-            .map { it.map { event -> event.asEventStoreEvent().getOrThrow() } }
-            .flatMap { eventStore.append("budget-$id", it) }
+        return provider.load(id, block)
+    }
+}
+
+class BudgetEventMapper(private val serializer: EventSerializer<BudgetEvent>) : EventStoreEventMapper<BudgetEvent> {
+    override fun toEvent(event: BudgetEvent): Result<EventStore.Event> {
+        return serializer.serialize(event)
+            .map { EventStore.Event(eventType = event.eventType(), body = it) }
+    }
+
+    override fun fromEvent(event: EventStore.Event): Result<BudgetEvent> {
+        return serializer.deserialize(event.eventType, event.body)
     }
 
     private fun BudgetEvent.eventType(): String = when (this) {
         is BudgetCreated -> "BudgetCreated"
     }
+}
 
-    private fun BudgetEvent.asEventStoreEvent(): Result<EventStore.Event> {
-        return BudgetEventSerializer()
-            .serialize(this)
-            .map { EventStore.Event(eventType = eventType(), body = it) }
+class BudgetEventSerializer : EventSerializer<BudgetEvent> {
+    override fun deserialize(eventType: String, data: String): Result<BudgetEvent> {
+        return when (eventType) {
+            "BudgetCreated" -> try {
+                Result.success(Json.decodeFromString<BudgetCreated>(data))
+            } catch (e: Throwable) {
+                Result.failure(e)
+            }
+            else -> Result.failure(Error("Unable to deserialize event with type $eventType"))
+        }
     }
 
-
-    class BudgetEventSerializer {
-        fun deserialize(eventType: String, data: String): Result<BudgetEvent> {
-            return when (eventType) {
-                "BudgetCreated" -> try {
-                    Result.success(Json.decodeFromString<BudgetCreated>(data))
-                } catch (e: Throwable) {
-                    Result.failure(e)
-                }
-                else -> Result.failure(Error("Unable to deserialize event with type $eventType"))
-            }
-        }
-
-        fun serialize(event: BudgetEvent): Result<String> {
-            return when (event) {
-                is BudgetCreated -> try {
-                    Result.success(Json.encodeToString(event))
-                } catch (e: Throwable) {
-                    Result.failure(e)
-                }
+    override fun serialize(event: BudgetEvent): Result<String> {
+        return when (event) {
+            is BudgetCreated -> try {
+                Result.success(Json.encodeToString(event))
+            } catch (e: Throwable) {
+                Result.failure(e)
             }
         }
     }

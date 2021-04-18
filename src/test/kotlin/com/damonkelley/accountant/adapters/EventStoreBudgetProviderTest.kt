@@ -2,6 +2,7 @@ package com.damonkelley.accountant.adapters
 
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
+import com.damonkelley.accountant.eventsourcing.EventStore
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat

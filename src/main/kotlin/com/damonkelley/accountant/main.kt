@@ -1,6 +1,5 @@
 package com.damonkelley.accountant
 
-import com.damonkelley.accountant.adapters.EventStoreBudgetRepository
 import com.damonkelley.accountant.budget.application.CreateBudgetHandler
 import com.damonkelley.accountant.budget.domain.BudgetCommand
 import com.damonkelley.accountant.budget.domain.CreateBudget
