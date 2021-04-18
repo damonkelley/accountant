@@ -9,13 +9,10 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.spekframework.spek2.Spek
 import java.util.UUID
 
-object EventStoreBudgetRepositoryTest : Spek({
+object EventStoreBudgetProviderTest : Spek({
     val name = "🍌 Banana Stand"
     group("#new") {
         group("when it succeeds") {
@@ -23,7 +20,7 @@ object EventStoreBudgetRepositoryTest : Spek({
                 val id = UUID.randomUUID()
                 val eventStore = InMemoryEventStore()
 
-                val result = EventStoreBudgetRepository(eventStore) { id }.new { it.create(name) }
+                val result = EventStoreBudgetProvider(eventStore) { id }.new { it.create(name) }
 
                 assertThat(
                     result,
@@ -34,7 +31,7 @@ object EventStoreBudgetRepositoryTest : Spek({
                 val id = UUID.randomUUID()
                 val eventStore = InMemoryEventStore()
 
-                EventStoreBudgetRepository(eventStore) { id }.new { it.create(name) }
+                EventStoreBudgetProvider(eventStore) { id }.new { it.create(name) }
 
                 assertThat(
                     eventStore.streams,
@@ -45,7 +42,7 @@ object EventStoreBudgetRepositoryTest : Spek({
 
         group("when it fails") {
             test("the result is failure") {
-                val result = EventStoreBudgetRepository(EventStoreThatFails()).new { it.create(name) }
+                val result = EventStoreBudgetProvider(EventStoreThatFails()).new { it.create(name) }
 
                 assertThat(
                     result,
@@ -60,7 +57,7 @@ object EventStoreBudgetRepositoryTest : Spek({
             val id = UUID.randomUUID()
             val eventStore = InMemoryEventStore()
 
-            val provider = EventStoreBudgetRepository(eventStore) { id }
+            val provider = EventStoreBudgetProvider(eventStore) { id }
             provider.new { it.create("V1") }
             provider.load(id) { it?.create(name) }
 
@@ -69,8 +66,52 @@ object EventStoreBudgetRepositoryTest : Spek({
                 hasEventInStream("budget-$id", BudgetCreated(name))
             )
         }
+
+        group("when loading from the EventStore fails") {
+            test("the result is failure") {
+                val eventStore = object : EventStore {
+                    override fun load(stream: String): Result<Collection<EventStore.Event>> =
+                        Result.failure(Error("Unable to load"))
+
+                    override fun append(stream: String, events: Collection<EventStore.Event>): Result<Unit> =
+                        Result.success(Unit)
+                }
+
+                val result = EventStoreBudgetProvider(eventStore)
+                    .load(UUID.randomUUID()) { it?.create(name) }
+
+                assertThat(
+                    result,
+                    Matcher(Result<Unit>::isFailure)
+                )
+            }
+        }
+
+        group("when appending to the EventStore fails") {
+            test("the result is failure") {
+                val eventStore = object : EventStore {
+                    override fun load(stream: String): Result<Collection<EventStore.Event>> =
+                        Result.success(listOf(event()))
+
+                    override fun append(stream: String, events: Collection<EventStore.Event>): Result<Unit> =
+                        Result.failure(Error("Unable to append"))
+                }
+
+                val result = EventStoreBudgetProvider(eventStore)
+                    .load(UUID.randomUUID()) { it?.create(name) }
+
+                assertThat(
+                    result,
+                    Matcher(Result<Unit>::isFailure)
+                )
+            }
+        }
     }
 })
+
+private fun event(): EventStore.Event {
+    return EventStore.Event("BudgetCreated", Json.encodeToString(BudgetCreated("")))
+}
 
 fun hasEventInStream(streamId: String, event: BudgetEvent): Matcher<Map<String, Collection<EventStore.Event>>> {
     val expectedEvent = when (event) {
@@ -88,9 +129,9 @@ fun hasEventInStream(streamId: String, event: BudgetEvent): Matcher<Map<String, 
     )
 }
 
-class EventStoreThatFails: EventStore {
+class EventStoreThatFails : EventStore {
     override fun load(stream: String): Result<Collection<EventStore.Event>> {
-        TODO("Not yet implemented")
+        return Result.failure(Error("Unable to load"))
     }
 
     override fun append(stream: String, events: Collection<EventStore.Event>): Result<Unit> {
@@ -103,8 +144,9 @@ class InMemoryEventStore : EventStore {
     val streams = mutableMapOf<String, Collection<EventStore.Event>>()
 
     override fun load(stream: String): Result<Collection<EventStore.Event>> {
-        // TODO: how should we handle a stream that doesn't exist
-        return Result.success(streams[stream] ?: emptyList())
+        return streams[stream]
+            ?.let(Result.Companion::success)
+            ?: Result.failure(Error("Stream not found"))
     }
 
     override fun append(stream: String, events: Collection<EventStore.Event>): Result<Unit> {

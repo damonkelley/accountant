@@ -13,7 +13,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
-
 interface EventStore {
     data class Event(
         val eventType: String,
@@ -24,7 +23,7 @@ interface EventStore {
     fun append(stream: String, events: Collection<Event>): Result<Unit>
 }
 
-class EventStoreBudgetRepository(private val eventStore: EventStore, val UUIDProvider: () -> UUID = UUID::randomUUID) :
+class EventStoreBudgetProvider(private val eventStore: EventStore, val UUIDProvider: () -> UUID = UUID::randomUUID) :
     NewBudgetProvider,
     ExistingBudgetProvider {
     override fun new(block: (Budget) -> Budget): Result<Unit> {
@@ -44,8 +43,7 @@ class EventStoreBudgetRepository(private val eventStore: EventStore, val UUIDPro
             .map { SimpleAggregateRoot<BudgetEvent>(id, emptyList()) }
             .map { block(Budget(it)).run { it.changes() } }
             .map { it.map { event -> event.asEventStoreEvent().getOrThrow() } }
-            .map { eventStore.append("budget-$id", it) }
-            .map { Result.success(Unit) }
+            .flatMap { eventStore.append("budget-$id", it) }
     }
 
     private fun BudgetEvent.eventType(): String = when (this) {
