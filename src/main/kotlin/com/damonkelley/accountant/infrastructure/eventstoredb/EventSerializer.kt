@@ -1,4 +1,4 @@
-package com.damonkelley.accountant.infrastructure.eventstore
+package com.damonkelley.accountant.infrastructure.eventstoredb
 
 interface EventSerializer<T> {
     fun serialize(event: T): Result<String>

@@ -5,10 +5,10 @@ import com.damonkelley.accountant.budget.application.NewBudgetProvider
 import com.damonkelley.accountant.budget.domain.Budget
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
-import com.damonkelley.accountant.eventsourcing.EventStore
-import com.damonkelley.accountant.infrastructure.eventstore.EventSerializer
-import com.damonkelley.accountant.infrastructure.eventstore.EventStoreAggregateRootProvider
-import com.damonkelley.accountant.infrastructure.eventstore.EventStoreEventMapper
+import com.damonkelley.accountant.eventstore.EventStore
+import com.damonkelley.accountant.infrastructure.eventstoredb.EventSerializer
+import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreAggregateRootProvider
+import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreEventMapper
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

@@ -1,0 +1,3 @@
+package com.damonkelley.accountant.eventstore
+
+interface EventStoreSubscriber

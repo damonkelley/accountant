@@ -1,6 +1,6 @@
-package com.damonkelley.accountant.infrastructure.eventstore
+package com.damonkelley.accountant.infrastructure.eventstoredb
 
-import com.damonkelley.accountant.eventsourcing.EventStore
+import com.damonkelley.accountant.eventstore.EventStore
 
 interface EventStoreEventMapper<T> {
     fun toEvent(event: T): Result<EventStore.Event>

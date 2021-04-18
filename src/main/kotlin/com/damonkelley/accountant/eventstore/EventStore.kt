@@ -1,4 +1,4 @@
-package com.damonkelley.accountant.eventsourcing
+package com.damonkelley.accountant.eventstore
 
 interface EventStore {
     data class Event(
