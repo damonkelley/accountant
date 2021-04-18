@@ -31,9 +31,9 @@ class CreateBudgetHandlerTest {
 }
 
 class InMemoryBudgetProvider(private val stub: Budget): NewBudgetProvider {
-    override fun new(block: (Budget) -> Budget): Result<Budget> {
+    override fun new(block: (Budget) -> Budget): Result<Unit> {
         return stub
                 .let(block)
-                .let { Result.success(it) }
+                .let { Result.success(Unit) }
     }
 }

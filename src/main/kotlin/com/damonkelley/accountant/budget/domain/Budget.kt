@@ -1,20 +1,18 @@
 package com.damonkelley.accountant.budget.domain
 
-import com.damonkelley.accountant.eventsourcing.AggregateRoot
+import com.damonkelley.accountant.eventsourcing.WritableAggregateRoot
 
-import java.util.UUID
-
-class Budget(val id: UUID, val recording: AggregateRoot<BudgetEvent>) : AggregateRoot<BudgetEvent> by recording {
+class Budget(aggregateRoot: WritableAggregateRoot<BudgetEvent>) : WritableAggregateRoot<BudgetEvent> by aggregateRoot {
     private lateinit var name: String
 
     fun create(name: String): Budget {
-        record(BudgetCreated(name))
+        raise(BudgetCreated(name))
 
         return this
     }
 
     init {
-        replayFacts {
+        facts {
             when (it) {
                 is BudgetCreated -> apply(it)
             }
@@ -26,9 +24,3 @@ class Budget(val id: UUID, val recording: AggregateRoot<BudgetEvent>) : Aggregat
         return event
     }
 }
-
-sealed class BudgetEvent
-data class BudgetCreated(val name: String) : BudgetEvent()
-
-sealed class BudgetCommands
-data class CreateBudget(val name: String) : BudgetCommands()

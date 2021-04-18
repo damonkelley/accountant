@@ -1,8 +1,31 @@
 package com.damonkelley.accountant.eventsourcing
 
+import java.util.UUID
+
 // TODO: Should this be used for Write side and Read side? Or should repository have a different interface?
-interface AggregateRoot<T> {
-    fun record(event: T): AggregateRoot<T>
-    fun replayFacts(apply: (T) -> Unit): AggregateRoot<T>
-    fun replayChanges(apply: (T)-> Unit): AggregateRoot<T>
+interface WritableAggregateRoot<T> {
+    val id: UUID
+    fun raise(event: T): WritableAggregateRoot<T>
+    fun facts(consumer: (T) -> Unit): WritableAggregateRoot<T>
+}
+
+interface ReadableAggregateRoot<T> {
+    val id: UUID
+    fun changes(): Collection<T>
+}
+
+class SimpleAggregateRoot<T>(override val id: UUID, val facts: Collection<T>): WritableAggregateRoot<T>, ReadableAggregateRoot<T> {
+    private val changes = mutableListOf<T>()
+
+    override fun raise(event: T): WritableAggregateRoot<T> {
+        return apply { changes.add(event) }
+    }
+
+    override fun facts(consumer: (T) -> Unit): WritableAggregateRoot<T> {
+        return apply { facts.forEach(consumer) }
+    }
+
+    override fun changes(): Collection<T> {
+        return changes
+    }
 }

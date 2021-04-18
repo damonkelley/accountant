@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+
 plugins {
     kotlin("jvm") version "1.4.32"
     kotlin("plugin.serialization") version "1.4.32"
@@ -27,10 +28,16 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
     testImplementation("com.natpryce:hamkrest:1.8.0.1")
     testImplementation("io.mockk:mockk:1.11.0")
+
+    val spekVersion = "2.0.15"
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
+    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform() {
+        includeEngines("spek2")
+    }
 }
 
 tasks.withType<KotlinCompile> {
