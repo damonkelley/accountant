@@ -3,10 +3,12 @@ package com.damonkelley.accountant.adapters
 import com.damonkelley.accountant.budget.application.ExistingBudgetProvider
 import com.damonkelley.accountant.budget.application.NewBudgetProvider
 import com.damonkelley.accountant.budget.domain.Budget
+import com.damonkelley.accountant.budget.domain.BudgetCommand
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
+import com.damonkelley.accountant.budget.domain.CreateBudget
 import com.damonkelley.accountant.eventstore.EventStore
-import com.damonkelley.accountant.infrastructure.eventstoredb.EventSerializer
+import com.damonkelley.accountant.eventstore.Serializer
 import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreAggregateRootProvider
 import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreEventMapper
 import kotlinx.serialization.decodeFromString
@@ -36,7 +38,7 @@ class EventStoreBudgetProvider(private val provider: EventStoreAggregateRootProv
     }
 }
 
-class BudgetEventMapper(private val serializer: EventSerializer<BudgetEvent>) : EventStoreEventMapper<BudgetEvent> {
+class BudgetEventMapper(private val serializer: Serializer<BudgetEvent>) : EventStoreEventMapper<BudgetEvent> {
     override fun toEvent(event: BudgetEvent): Result<EventStore.Event> {
         return serializer.serialize(event)
             .map { EventStore.Event(eventType = event.eventType(), body = it) }
@@ -51,7 +53,7 @@ class BudgetEventMapper(private val serializer: EventSerializer<BudgetEvent>) : 
     }
 }
 
-class BudgetEventSerializer : EventSerializer<BudgetEvent> {
+class BudgetEventSerializer : Serializer<BudgetEvent> {
     override fun deserialize(eventType: String, data: String): Result<BudgetEvent> {
         return when (eventType) {
             "BudgetCreated" -> try {
@@ -66,6 +68,28 @@ class BudgetEventSerializer : EventSerializer<BudgetEvent> {
     override fun serialize(event: BudgetEvent): Result<String> {
         return when (event) {
             is BudgetCreated -> try {
+                Result.success(Json.encodeToString(event))
+            } catch (e: Throwable) {
+                Result.failure(e)
+            }
+        }
+    }
+}
+class BudgetCommandSerializer : Serializer<BudgetCommand> {
+    override fun deserialize(eventType: String, data: String): Result<BudgetCommand> {
+        return when (eventType) {
+            "CreateBudget" -> try {
+                Result.success(Json.decodeFromString<CreateBudget>(data))
+            } catch (e: Throwable) {
+                Result.failure(e)
+            }
+            else -> Result.failure(Error("Unable to deserialize event with type $eventType"))
+        }
+    }
+
+    override fun serialize(event: BudgetCommand): Result<String> {
+        return when (event) {
+            is CreateBudget -> try {
                 Result.success(Json.encodeToString(event))
             } catch (e: Throwable) {
                 Result.failure(e)
