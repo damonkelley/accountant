@@ -2,17 +2,12 @@ package com.damonkelley.accountant.infrastructure.eventstoredb
 
 import com.damonkelley.accountant.eventstore.EventStore
 import com.damonkelley.accountant.eventstore.EventStoreSubscriber
-import com.damonkelley.accountant.tracing.Trace
-import com.eventstore.dbclient.EventData
 import com.eventstore.dbclient.EventStoreDBClient
 import com.eventstore.dbclient.ResolvedEvent
 import com.eventstore.dbclient.Subscription
 import com.eventstore.dbclient.SubscriptionListener
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.util.UUID
 
-class EventStoreForEventStoreDB(private val client: EventStoreDBClient) : EventStore, EventStoreSubscriber {
+class EventStoreDBEventStoreClient(private val client: EventStoreDBClient) : EventStore, EventStoreSubscriber {
     override fun load(stream: String): Result<Collection<EventStore.Event>> {
         // TODO: Can this leverage Kotlin coroutines?
         return client.readStream(stream)
@@ -20,7 +15,7 @@ class EventStoreForEventStoreDB(private val client: EventStoreDBClient) : EventS
             .thenApply { Result.success(it) }
             .exceptionally { Result.failure(it) }
             .get()
-            .also { it.map { events -> println("Load: $events")} }
+            .also { it.map { events -> println("Load: $events") } }
     }
 
     override fun append(stream: String, events: Collection<EventStore.Event>): Result<Unit> {
@@ -32,7 +27,7 @@ class EventStoreForEventStoreDB(private val client: EventStoreDBClient) : EventS
     }
 
     override fun subscribe(streamId: String, onEvent: (EventStore.Event) -> Result<Unit>) {
-        client.subscribeToStream(streamId, object: SubscriptionListener() {
+        client.subscribeToStream(streamId, object : SubscriptionListener() {
             override fun onError(subscription: Subscription, throwable: Throwable) {
                 println("Error: ${subscription.subscriptionId} | $throwable")
             }
@@ -47,27 +42,5 @@ class EventStoreForEventStoreDB(private val client: EventStoreDBClient) : EventS
             }
         })
     }
-
-    private fun ResolvedEvent.toEventStoreEvent(): EventStore.Event {
-        val userMetadata = UserMetadata.from(this)
-        return EventStore.Event(
-            eventType = event.eventType,
-            body = String(event.eventData),
-            trace = Trace(
-                id = event.eventId,
-                correlationId = userMetadata?.correlationId ?: event.eventId,
-                causationId =  userMetadata?.causationId ?: event.eventId
-            )
-        )
-    }
-
-    private fun EventStore.Event.toEventData(): EventData {
-        return EventData(
-            UUID.randomUUID(),
-            eventType,
-            "application/json",
-            body.toByteArray(),
-            Json.encodeToString(UserMetadata.from(this)).toByteArray()
-        )
-    }
 }
+

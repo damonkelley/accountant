@@ -10,20 +10,20 @@ import com.damonkelley.accountant.budget.domain.CreateBudget
 import com.damonkelley.accountant.eventstore.EventStore
 import com.damonkelley.accountant.tracing.EventTrace
 import com.damonkelley.accountant.eventstore.Serializer
-import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreAggregateRootProvider
-import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreEventMapper
+import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreDBAggregateRootProvider
+import com.damonkelley.accountant.infrastructure.eventstoredb.EventStoreDBEventMapper
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
 class EventStoreBudgetProvider(
-    private val provider: EventStoreAggregateRootProvider<BudgetEvent, Budget>
+    private val provider: EventStoreDBAggregateRootProvider<BudgetEvent, Budget>
 ) :
     NewBudgetProvider,
     ExistingBudgetProvider {
     constructor(eventStore: EventStore, UUIDProvider: () -> UUID = UUID::randomUUID) : this(
-        EventStoreAggregateRootProvider(
+        EventStoreDBAggregateRootProvider(
             eventStore = eventStore,
             category = "budget",
             construct = ::Budget,
@@ -41,7 +41,7 @@ class EventStoreBudgetProvider(
     }
 }
 
-class BudgetEventMapper(private val serializer: Serializer<BudgetEvent>) : EventStoreEventMapper<BudgetEvent> {
+class BudgetEventMapper(private val serializer: Serializer<BudgetEvent>) : EventStoreDBEventMapper<BudgetEvent> {
     override fun toEvent(event: BudgetEvent, trace: EventTrace): Result<EventStore.Event> {
         return serializer.serialize(event)
             .map { EventStore.Event(eventType = event.eventType(), body = it, trace = trace) }

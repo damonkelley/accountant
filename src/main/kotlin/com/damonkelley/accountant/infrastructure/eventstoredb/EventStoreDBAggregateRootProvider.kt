@@ -10,11 +10,11 @@ import com.damonkelley.common.result.extensions.combine
 import com.damonkelley.common.result.extensions.flatMap
 import java.util.UUID
 
-class EventStoreAggregateRootProvider<Event, ConcreteAggregateRoot>(
+class EventStoreDBAggregateRootProvider<Event, ConcreteAggregateRoot>(
     private val eventStore: EventStore,
     private val category: String,
     private val construct: (WritableAggregateRoot<Event>) -> ConcreteAggregateRoot,
-    private val mapper: EventStoreEventMapper<Event>,
+    private val mapper: EventStoreDBEventMapper<Event>,
     val UUIDProvider: () -> UUID = UUID::randomUUID
 ) : NewAggregateRootProvider<ConcreteAggregateRoot>, ExistingAggregateRootProvider<ConcreteAggregateRoot> {
     override fun new(trace: EventTrace, block: (ConcreteAggregateRoot) -> ConcreteAggregateRoot): Result<Unit> {
