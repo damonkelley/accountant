@@ -3,8 +3,8 @@ package com.damonkelley.accountant.eventstore
 import com.damonkelley.accountant.tracing.EventTrace
 import com.damonkelley.common.result.extensions.flatMap
 
-class EventStoreSubscription<Message>(
-    private val eventStore: EventStoreSubscriber,
+class Subscription<Message>(
+    private val eventStore: Subscriber,
     private val serializer: EventDeserializer<Message>
 ) {
     fun of(stream: String, block: (EventTrace, Message) -> Result<Unit>) {

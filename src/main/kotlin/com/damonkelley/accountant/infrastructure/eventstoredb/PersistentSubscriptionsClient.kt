@@ -1,17 +1,17 @@
 package com.damonkelley.accountant.infrastructure.eventstoredb
 
 import com.damonkelley.accountant.eventstore.EventStore
-import com.damonkelley.accountant.eventstore.EventStoreSubscriber
+import com.damonkelley.accountant.eventstore.Subscriber
 import com.eventstore.dbclient.EventStoreDBPersistentSubscriptionsClient
 import com.eventstore.dbclient.NackAction
 import com.eventstore.dbclient.PersistentSubscription
 import com.eventstore.dbclient.PersistentSubscriptionListener
 import com.eventstore.dbclient.ResolvedEvent
 
-class EventStoreDBPersistentSubscriptionEventStoreClient(
+class PersistentSubscriptionsClient(
     private val group: String,
     private val client: EventStoreDBPersistentSubscriptionsClient
-) : EventStoreSubscriber {
+) : Subscriber {
     override fun subscribe(streamId: String, onEvent: (EventStore.Event) -> Result<Unit>) {
         client.subscribe(streamId, group, object : PersistentSubscriptionListener() {
             override fun onError(subscription: PersistentSubscription, throwable: Throwable) {

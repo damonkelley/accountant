@@ -20,7 +20,7 @@ object EventStoreSubscriptionTest : Spek({
             val subscriber = TestSubscriber()
                 .append("stream-id", eventStoreEvent(serializer, event))
 
-            EventStoreSubscription(subscriber, serializer).of("stream-id") {
+            Subscription(subscriber, serializer).of("stream-id") {
                 Result.success(Unit)
             }
 
@@ -35,7 +35,7 @@ object EventStoreSubscriptionTest : Spek({
 
         val onMessage = spyk({_: TestMessage -> Result.success(Unit)})
 
-        EventStoreSubscription(subscriber, serializer).of("stream-id") {
+        Subscription(subscriber, serializer).of("stream-id") {
             onMessage(it)
         }
 
@@ -53,7 +53,7 @@ private fun eventStoreEvent(serializer: TestMessageSerializer, event: TestMessag
 @Serializable
 data class TestMessage(val id: String = UUID.randomUUID().toString())
 
-class TestSubscriber : EventStoreSubscriber {
+class TestSubscriber : Subscriber {
     private val streams = mutableMapOf<String, List<EventStore.Event>>()
     val outcomes = mutableListOf<Result<Unit>>()
 

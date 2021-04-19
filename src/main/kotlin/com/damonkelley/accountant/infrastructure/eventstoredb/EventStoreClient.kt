@@ -1,13 +1,13 @@
 package com.damonkelley.accountant.infrastructure.eventstoredb
 
 import com.damonkelley.accountant.eventstore.EventStore
-import com.damonkelley.accountant.eventstore.EventStoreSubscriber
+import com.damonkelley.accountant.eventstore.Subscriber
 import com.eventstore.dbclient.EventStoreDBClient
 import com.eventstore.dbclient.ResolvedEvent
 import com.eventstore.dbclient.Subscription
 import com.eventstore.dbclient.SubscriptionListener
 
-class EventStoreDBEventStoreClient(private val client: EventStoreDBClient) : EventStore, EventStoreSubscriber {
+class EventStoreClient(private val client: EventStoreDBClient) : EventStore, Subscriber {
     override fun load(stream: String): Result<Collection<EventStore.Event>> {
         // TODO: Can this leverage Kotlin coroutines?
         return client.readStream(stream)
