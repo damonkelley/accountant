@@ -1,8 +1,9 @@
 package com.damonkelley.accountant.infrastructure.eventstoredb
 
 import com.damonkelley.accountant.eventstore.EventStore
+import com.damonkelley.accountant.tracing.EventTrace
 
 interface EventStoreEventMapper<T> {
-    fun toEvent(event: T): Result<EventStore.Event>
+    fun toEvent(event: T, trace: EventTrace): Result<EventStore.Event>
     fun fromEvent(event: EventStore.Event): Result<T>
 }

@@ -1,8 +1,12 @@
 package com.damonkelley.accountant.eventsourcing
 
+import com.damonkelley.accountant.tracing.EventTrace
 import java.util.UUID
 
-interface AggregateRootProvider<ConcreteAggregateRoot> {
-    fun new(block: (ConcreteAggregateRoot) -> ConcreteAggregateRoot): Result<Unit>
-    fun load(id: UUID, block: (ConcreteAggregateRoot?) -> ConcreteAggregateRoot?): Result<Unit>
+interface NewAggregateRootProvider<ConcreteAggregateRoot> {
+    fun new(trace: EventTrace, block: (ConcreteAggregateRoot) -> ConcreteAggregateRoot): Result<Unit>
+}
+
+interface ExistingAggregateRootProvider<ConcreteAggregateRoot> {
+    fun load(id: UUID, trace: EventTrace, block: (ConcreteAggregateRoot?) -> ConcreteAggregateRoot?): Result<Unit>
 }

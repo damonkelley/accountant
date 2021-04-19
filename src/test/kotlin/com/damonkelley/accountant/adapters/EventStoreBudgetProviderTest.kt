@@ -3,6 +3,7 @@ package com.damonkelley.accountant.adapters
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
 import com.damonkelley.accountant.eventstore.EventStore
+import com.damonkelley.accountant.tracing.Trace
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
@@ -21,7 +22,7 @@ object EventStoreBudgetProviderTest : Spek({
                 val id = UUID.randomUUID()
                 val eventStore = InMemoryEventStore()
 
-                val result = EventStoreBudgetProvider(eventStore) { id }.new { it.create(name) }
+                val result = EventStoreBudgetProvider(Trace(id), eventStore) { id }.new { it.create(name) }
 
                 assertThat(
                     result,
@@ -32,7 +33,7 @@ object EventStoreBudgetProviderTest : Spek({
                 val id = UUID.randomUUID()
                 val eventStore = InMemoryEventStore()
 
-                EventStoreBudgetProvider(eventStore) { id }.new { it.create(name) }
+                EventStoreBudgetProvider(Trace(id), eventStore) { id }.new { it.create(name) }
 
                 assertThat(
                     eventStore.streams,
@@ -43,7 +44,9 @@ object EventStoreBudgetProviderTest : Spek({
 
         group("when it fails") {
             test("the result is failure") {
-                val result = EventStoreBudgetProvider(EventStoreThatFails()).new { it.create(name) }
+                val result =
+                    EventStoreBudgetProvider(Trace(UUID.randomUUID()), EventStoreThatFails())
+                        .new { it.create(name) }
 
                 assertThat(
                     result,
@@ -58,7 +61,7 @@ object EventStoreBudgetProviderTest : Spek({
             val id = UUID.randomUUID()
             val eventStore = InMemoryEventStore()
 
-            val provider = EventStoreBudgetProvider(eventStore) { id }
+            val provider = EventStoreBudgetProvider(Trace(id), eventStore) { id }
             provider.new { it.create("V1") }
             provider.load(id) { it?.create(name) }
 
@@ -78,7 +81,7 @@ object EventStoreBudgetProviderTest : Spek({
                         Result.success(Unit)
                 }
 
-                val result = EventStoreBudgetProvider(eventStore)
+                val result = EventStoreBudgetProvider(Trace(UUID.randomUUID()), eventStore)
                     .load(UUID.randomUUID()) { it?.create(name) }
 
                 assertThat(
@@ -98,7 +101,7 @@ object EventStoreBudgetProviderTest : Spek({
                         Result.failure(Error("Unable to append"))
                 }
 
-                val result = EventStoreBudgetProvider(eventStore)
+                val result = EventStoreBudgetProvider(Trace(UUID.randomUUID()), eventStore)
                     .load(UUID.randomUUID()) { it?.create(name) }
 
                 assertThat(

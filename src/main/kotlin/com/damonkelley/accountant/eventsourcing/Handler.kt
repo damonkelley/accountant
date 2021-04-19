@@ -1,6 +1,8 @@
 package com.damonkelley.accountant.eventsourcing
 
+import com.damonkelley.accountant.tracing.EventTrace
+
 interface Handler<T> {
-    fun handle(command: T): Result<Unit>
+    fun handle(trace: EventTrace, command: T): Result<Unit>
 }
 

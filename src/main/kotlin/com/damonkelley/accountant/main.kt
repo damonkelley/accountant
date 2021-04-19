@@ -15,12 +15,11 @@ fun main() {
     val settings = EventStoreDBConnectionString.parse("esdb://localhost:2113?tls=false")
     val client = EventStoreDBClient.create(settings)
     val eventStore = EventStoreForEventStoreDB(client)
+    val repository = EventStoreBudgetProvider(eventStore)
 
-    EventStoreSubscription(eventStore, BudgetCommandSerializer()).of("budget:commands") { command: BudgetCommand ->
-        val repository = EventStoreBudgetProvider(eventStore)
-
+    EventStoreSubscription(eventStore, BudgetCommandSerializer()).of("budget:commands") { trace, command: BudgetCommand ->
         when (command) {
-            is CreateBudget -> CreateBudgetHandler(repository).handle(command).also { println(command)}
+            is CreateBudget -> CreateBudgetHandler(repository).handle(trace, command).also { println(command)}
         }
     }
 
