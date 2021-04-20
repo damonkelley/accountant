@@ -2,6 +2,9 @@ import com.damonkelley.accountant.budget.application.CreateBudgetHandler
 import com.damonkelley.accountant.budget.application.NewBudgetProvider
 import com.damonkelley.accountant.budget.domain.Budget
 import com.damonkelley.accountant.budget.domain.CreateBudget
+import com.damonkelley.accountant.trace
+import com.damonkelley.accountant.tracing.EventTrace
+import com.damonkelley.accountant.tracing.Trace
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -13,7 +16,7 @@ class CreateBudgetHandlerTest {
         val budget = mockk<Budget>(relaxed = true)
 
         val actual = CreateBudgetHandler(InMemoryBudgetProvider(budget))
-                .handle(CreateBudget(name = "A new budget"))
+            .handle(trace(), CreateBudget(name = "A new budget"))
 
         assertEquals(Result.success(Unit), actual)
     }
@@ -24,16 +27,16 @@ class CreateBudgetHandlerTest {
 
         val provider = InMemoryBudgetProvider(budget)
         CreateBudgetHandler(provider)
-                .handle(CreateBudget(name = "A new budget"))
+            .handle(trace(), CreateBudget(name = "A new budget"))
 
         verify { budget.create("A new budget") }
     }
 }
 
-class InMemoryBudgetProvider(private val stub: Budget): NewBudgetProvider {
-    override fun new(block: (Budget) -> Budget): Result<Unit> {
+class InMemoryBudgetProvider(private val stub: Budget) : NewBudgetProvider {
+    override fun new(trace: EventTrace, block: (Budget) -> Budget): Result<Unit> {
         return stub
-                .let(block)
-                .let { Result.success(Unit) }
+            .let(block)
+            .let { Result.success(Unit) }
     }
 }

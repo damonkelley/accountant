@@ -6,6 +6,7 @@ import com.damonkelley.accountant.budget.domain.Budget
 import com.damonkelley.accountant.budget.domain.BudgetCommand
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
+import com.damonkelley.accountant.budget.domain.BudgetRenamed
 import com.damonkelley.accountant.budget.domain.CreateBudget
 import com.damonkelley.accountant.eventstore.EventStore
 import com.damonkelley.accountant.tracing.EventTrace
@@ -16,6 +17,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import kotlin.reflect.KClass
 
 class EventStoreBudgetProvider(
     private val provider: AggregateRootProvider<BudgetEvent, Budget>
@@ -53,6 +55,7 @@ class BudgetEventMapper(private val serializer: Serializer<BudgetEvent>) : Event
 
     private fun BudgetEvent.eventType(): String = when (this) {
         is BudgetCreated -> "BudgetCreated"
+        is BudgetRenamed -> "BudgetRenamed"
     }
 }
 
@@ -70,11 +73,16 @@ class BudgetEventSerializer : Serializer<BudgetEvent> {
 
     override fun serialize(event: BudgetEvent): Result<String> {
         return when (event) {
-            is BudgetCreated -> try {
-                Result.success(Json.encodeToString(event))
-            } catch (e: Throwable) {
-                Result.failure(e)
-            }
+            is BudgetCreated -> event.toJson()
+            is BudgetRenamed -> event.toJson()
+        }
+    }
+
+    private inline fun <reified T> T.toJson(): Result<String> {
+        return try {
+            Result.success(Json.encodeToString(this))
+        } catch (e: Throwable) {
+            Result.failure(e)
         }
     }
 }

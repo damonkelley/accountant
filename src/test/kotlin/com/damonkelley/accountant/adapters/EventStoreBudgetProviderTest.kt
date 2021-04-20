@@ -2,11 +2,15 @@ package com.damonkelley.accountant.adapters
 
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
+import com.damonkelley.accountant.budget.domain.BudgetRenamed
 import com.damonkelley.accountant.eventstore.EventStore
-import com.damonkelley.accountant.tracing.Trace
+import com.damonkelley.accountant.trace
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.allOf
+import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
 import kotlinx.serialization.encodeToString
@@ -22,7 +26,7 @@ object EventStoreBudgetProviderTest : Spek({
                 val id = UUID.randomUUID()
                 val eventStore = InMemoryEventStore()
 
-                val result = EventStoreBudgetProvider(Trace(id), eventStore) { id }.new { it.create(name) }
+                val result = EventStoreBudgetProvider(eventStore) { id }.new(trace()) { it.create(name) }
 
                 assertThat(
                     result,
@@ -33,7 +37,7 @@ object EventStoreBudgetProviderTest : Spek({
                 val id = UUID.randomUUID()
                 val eventStore = InMemoryEventStore()
 
-                EventStoreBudgetProvider(Trace(id), eventStore) { id }.new { it.create(name) }
+                EventStoreBudgetProvider(eventStore) { id }.new(trace()) { it.create(name) }
 
                 assertThat(
                     eventStore.streams,
@@ -45,8 +49,8 @@ object EventStoreBudgetProviderTest : Spek({
         group("when it fails") {
             test("the result is failure") {
                 val result =
-                    EventStoreBudgetProvider(Trace(UUID.randomUUID()), EventStoreThatFails())
-                        .new { it.create(name) }
+                    EventStoreBudgetProvider(EventStoreThatFails())
+                        .new(trace()) { it.create(name) }
 
                 assertThat(
                     result,
@@ -61,9 +65,9 @@ object EventStoreBudgetProviderTest : Spek({
             val id = UUID.randomUUID()
             val eventStore = InMemoryEventStore()
 
-            val provider = EventStoreBudgetProvider(Trace(id), eventStore) { id }
-            provider.new { it.create("V1") }
-            provider.load(id) { it?.create(name) }
+            val provider = EventStoreBudgetProvider(eventStore) { id }
+            provider.new(trace()) { it.create("V1") }
+            provider.load(id, trace()) { it?.create(name) }
 
             assertThat(
                 eventStore.streams,
@@ -81,8 +85,8 @@ object EventStoreBudgetProviderTest : Spek({
                         Result.success(Unit)
                 }
 
-                val result = EventStoreBudgetProvider(Trace(UUID.randomUUID()), eventStore)
-                    .load(UUID.randomUUID()) { it?.create(name) }
+                val result = EventStoreBudgetProvider(eventStore)
+                    .load(UUID.randomUUID(), trace()) { it?.create(name) }
 
                 assertThat(
                     result,
@@ -101,8 +105,8 @@ object EventStoreBudgetProviderTest : Spek({
                         Result.failure(Error("Unable to append"))
                 }
 
-                val result = EventStoreBudgetProvider(Trace(UUID.randomUUID()), eventStore)
-                    .load(UUID.randomUUID()) { it?.create(name) }
+                val result = EventStoreBudgetProvider(eventStore)
+                    .load(UUID.randomUUID(), trace()) { it?.create(name) }
 
                 assertThat(
                     result,
@@ -119,17 +123,19 @@ private fun event(): EventStore.Event {
 
 fun hasEventInStream(streamId: String, event: BudgetEvent): Matcher<Map<String, Collection<EventStore.Event>>> {
     val expectedEvent = when (event) {
-        is BudgetCreated -> {
-            EventStore.Event(
-                eventType = "BudgetCreated",
-                body = Json.encodeToString(event)
-            )
-        }
+        is BudgetCreated -> EventStore.Event(eventType = "BudgetCreated", body = Json.encodeToString(event))
+        is BudgetRenamed -> EventStore.Event(eventType = "BudgetRenamed", body = Json.encodeToString(event))
+    }
+
+    fun hasEventLike(event: EventStore.Event): Matcher<EventStore.Event> {
+        return has(EventStore.Event::body, equalTo(event.body)) and
+                has(EventStore.Event::eventType, equalTo(event.eventType))
+
     }
 
     return allOf(
         has("stream", { it.keys }, hasElement(streamId)),
-        has("event", { it[streamId] ?: emptyList() }, hasElement(expectedEvent)),
+        has("event", { it[streamId] ?: emptyList() }, anyElement(hasEventLike(expectedEvent))),
     )
 }
 

@@ -11,3 +11,8 @@ data class BudgetCreated(
         val name: String
 ) : BudgetEvent()
 
+@Serializable
+data class BudgetRenamed(
+        @SerialName("name")
+        val name: String
+) : BudgetEvent()

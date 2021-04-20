@@ -23,4 +23,10 @@ class Budget(aggregateRoot: WritableAggregateRoot<BudgetEvent>) : WritableAggreg
         name = event.name
         return event
     }
+
+    fun rename(name: String): Budget {
+        return apply {
+            raise(BudgetRenamed(name))
+        }
+    }
 }

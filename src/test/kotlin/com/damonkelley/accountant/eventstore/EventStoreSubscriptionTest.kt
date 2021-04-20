@@ -20,7 +20,7 @@ object EventStoreSubscriptionTest : Spek({
             val subscriber = TestSubscriber()
                 .append("stream-id", eventStoreEvent(serializer, event))
 
-            Subscription(subscriber, serializer).of("stream-id") {
+            Subscription(subscriber, serializer).of("stream-id") { _, _ ->
                 Result.success(Unit)
             }
 
@@ -35,8 +35,8 @@ object EventStoreSubscriptionTest : Spek({
 
         val onMessage = spyk({_: TestMessage -> Result.success(Unit)})
 
-        Subscription(subscriber, serializer).of("stream-id") {
-            onMessage(it)
+        Subscription(subscriber, serializer).of("stream-id") { _, command ->
+            onMessage(command)
         }
 
         verify { onMessage(testMessage) }
