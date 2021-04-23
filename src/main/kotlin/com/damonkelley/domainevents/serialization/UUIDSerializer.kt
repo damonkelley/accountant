@@ -1,4 +1,4 @@
-package com.damonkelley.accountant.infrastructure.serialization
+package com.damonkelley.domainevents.serialization
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer

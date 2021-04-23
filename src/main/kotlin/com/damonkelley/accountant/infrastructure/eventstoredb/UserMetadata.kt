@@ -1,7 +1,7 @@
 package com.damonkelley.accountant.infrastructure.eventstoredb
 
 import com.damonkelley.accountant.tracing.EventTrace
-import com.damonkelley.accountant.infrastructure.serialization.UUIDSerializer
+import com.damonkelley.domainevents.serialization.UUIDSerializer
 import com.eventstore.dbclient.ResolvedEvent
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

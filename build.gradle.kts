@@ -4,6 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.4.32"
     kotlin("plugin.serialization") version "1.4.32"
+
+    id("com.adarshr.test-logger") version "2.1.1"
     application
 }
 
@@ -32,12 +34,13 @@ dependencies {
     val spekVersion = "2.0.15"
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")
+
+    val kotestVersion = "4.4.3"
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
 }
 
-tasks.test {
-    useJUnitPlatform() {
-        includeEngines("spek2")
-    }
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 tasks.withType<KotlinCompile> {
