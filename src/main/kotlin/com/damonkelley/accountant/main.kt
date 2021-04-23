@@ -27,6 +27,7 @@ fun main() {
     Subscription(persistentSubscriptionClient, BudgetCommandSerializer()).of("budget:commands") { trace, command: BudgetCommand ->
         when (command) {
             is CreateBudget -> CreateBudgetHandler(repository).handle(trace, command).also { println(command)}
+            else -> Result.success(Unit)
         }
     }
 
