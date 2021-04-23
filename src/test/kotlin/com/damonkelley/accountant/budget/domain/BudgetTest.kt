@@ -5,11 +5,11 @@ import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
-import org.spekframework.spek2.Spek
+import io.kotest.core.spec.style.FunSpec
 import java.util.UUID
 
-class BudgetTest : Spek({
-    group("create") {
+class BudgetTest : FunSpec({
+    context("create") {
         test("creates a new budget") {
             val aggregateRoot = AggregateRootForTesting()
             Budget(aggregateRoot).create("My first budget")
@@ -18,7 +18,7 @@ class BudgetTest : Spek({
         }
     }
 
-    group("rename") {
+    context("rename") {
         test("renames the budget") {
             val aggregateRoot = AggregateRootForTesting()
 

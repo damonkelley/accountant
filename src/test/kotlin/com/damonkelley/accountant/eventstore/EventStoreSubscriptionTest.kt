@@ -5,16 +5,16 @@ import com.natpryce.hamkrest.allElements
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.serialization.Serializable
-import org.spekframework.spek2.Spek
 import java.util.UUID
 
-object EventStoreSubscriptionTest : Spek({
+class EventStoreSubscriptionTest : FunSpec({
     val serializer = TestMessageSerializer()
 
-    group("#of") {
+    context("#of") {
         test("it works") {
             val event = TestMessage("test")
             val subscriber = TestSubscriber()
