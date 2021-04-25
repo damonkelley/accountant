@@ -1,5 +1,6 @@
 package com.damonkelley.accountant.budget.domain
 
+import com.damonkelley.accountant.eventsourcing.AggregateRoot
 import com.damonkelley.accountant.eventsourcing.WritableAggregateRoot
 
 interface Createable {
@@ -10,7 +11,7 @@ interface Renamable {
     fun rename(name: String): Renamable
 }
 
-class Budget(aggregateRoot: WritableAggregateRoot<BudgetEvent>) :
+class Budget(aggregateRoot: AggregateRoot<BudgetEvent>) :
     Renamable,
     Createable,
     WritableAggregateRoot<BudgetEvent> by aggregateRoot {

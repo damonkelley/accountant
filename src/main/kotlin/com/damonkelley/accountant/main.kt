@@ -2,7 +2,6 @@ package com.damonkelley.accountant
 
 import com.damonkelley.accountant.budget.adapters.serializers.BudgetCommandSerializer
 import com.damonkelley.accountant.budget.adapters.EventStoreBudgetProvider
-import com.damonkelley.accountant.budget.application.CreateBudgetHandler
 import com.damonkelley.accountant.budget.domain.BudgetCommand
 import com.damonkelley.accountant.budget.domain.CreateBudget
 import com.damonkelley.accountant.eventstore.Subscription
@@ -24,11 +23,8 @@ fun main() {
     val eventStore = EventStoreClient(client)
     val repository = EventStoreBudgetProvider(eventStore)
 
-    Subscription(persistentSubscriptionClient, BudgetCommandSerializer()).of("budget:commands") { trace, command: BudgetCommand ->
-        when (command) {
-            is CreateBudget -> CreateBudgetHandler(repository).handle(trace, command).also { println(command)}
-            else -> Result.success(Unit)
-        }
+    Subscription(persistentSubscriptionClient, BudgetCommandSerializer()).of("budget:commands") { _, _->
+        Result.success(Unit)
     }
 
     readLine()
