@@ -1,5 +1,6 @@
 package com.damonkelley.accountant.budget.domain
 
+import com.damonkelley.accountant.eventsourcing.AggregateRoot
 import com.damonkelley.accountant.eventsourcing.WritableAggregateRoot
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
@@ -36,15 +37,11 @@ fun published(event: BudgetEvent): Matcher<AggregateRootForTesting> {
 }
 
 class AggregateRootForTesting(override val id: UUID = UUID.nameUUIDFromBytes("AggregateRootForTesting".toByteArray())) :
-    WritableAggregateRoot<BudgetEvent> {
+    AggregateRoot<BudgetEvent> {
 
     val events = mutableListOf<BudgetEvent>()
 
-    override fun raise(event: BudgetEvent): WritableAggregateRoot<BudgetEvent> {
-        return apply { events.add(event) }
-    }
-
-    override fun facts(consumer: (BudgetEvent) -> Unit): WritableAggregateRoot<BudgetEvent> {
-        return this
-    }
+    override fun raise(event: BudgetEvent): WritableAggregateRoot<BudgetEvent> = apply { events.add(event) }
+    override fun facts(consumer: (BudgetEvent) -> Unit): WritableAggregateRoot<BudgetEvent> = this
+    override fun changes(): Collection<BudgetEvent> = events
 }

@@ -1,7 +1,7 @@
 package com.damonkelley.accountant.budget.domain
 
 import com.damonkelley.accountant.eventsourcing.AggregateRoot
-import com.damonkelley.accountant.eventsourcing.WritableAggregateRoot
+import com.damonkelley.accountant.eventsourcing.ReadableAggregateRoot
 
 interface Createable {
     fun create(name: String): Createable
@@ -11,20 +11,20 @@ interface Renamable {
     fun rename(name: String): Renamable
 }
 
-class Budget(aggregateRoot: AggregateRoot<BudgetEvent>) :
+class Budget(val aggregateRoot: AggregateRoot<BudgetEvent>) :
     Renamable,
     Createable,
-    WritableAggregateRoot<BudgetEvent> by aggregateRoot {
-    private lateinit var name: String
+    ReadableAggregateRoot<BudgetEvent> by aggregateRoot {
+    var name: String = ""
 
     override fun create(name: String): Budget {
-        raise(BudgetCreated(name))
+        aggregateRoot.raise(apply(BudgetCreated(name)))
 
         return this
     }
 
     init {
-        facts {
+        aggregateRoot.facts {
             when (it) {
                 is BudgetCreated -> apply(it)
                 else -> Unit
@@ -39,7 +39,7 @@ class Budget(aggregateRoot: AggregateRoot<BudgetEvent>) :
 
     override fun rename(name: String): Budget {
         return apply {
-            raise(BudgetRenamed(name))
+            aggregateRoot.raise(BudgetRenamed(name))
         }
     }
 }

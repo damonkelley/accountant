@@ -3,8 +3,6 @@ package com.damonkelley.accountant.infrastructure.eventstoredb
 import com.damonkelley.accountant.eventsourcing.AggregateRoot
 import com.damonkelley.accountant.eventsourcing.CanLoad
 import com.damonkelley.accountant.eventsourcing.CanSave
-import com.damonkelley.accountant.eventsourcing.ExistingAggregateRootProvider
-import com.damonkelley.accountant.eventsourcing.NewAggregateRootProvider
 import com.damonkelley.accountant.eventsourcing.SimpleAggregateRoot
 import com.damonkelley.accountant.eventstore.EventStore
 import com.damonkelley.accountant.tracing.EventTrace

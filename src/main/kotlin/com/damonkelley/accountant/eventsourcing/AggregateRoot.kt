@@ -16,7 +16,7 @@ interface ReadableAggregateRoot<T> {
 
 interface AggregateRoot<T>: ReadableAggregateRoot<T>, WritableAggregateRoot<T>
 
-class SimpleAggregateRoot<T>(override val id: UUID, val facts: Collection<T>): WritableAggregateRoot<T>, ReadableAggregateRoot<T>, AggregateRoot<T> {
+class SimpleAggregateRoot<T>(override val id: UUID, val facts: Collection<T> = emptyList()): WritableAggregateRoot<T>, ReadableAggregateRoot<T>, AggregateRoot<T> {
     private val changes = mutableListOf<T>()
 
     override fun raise(event: T): WritableAggregateRoot<T> {
