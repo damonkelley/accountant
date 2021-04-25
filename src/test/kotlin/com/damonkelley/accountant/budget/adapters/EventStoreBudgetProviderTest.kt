@@ -1,4 +1,4 @@
-package com.damonkelley.accountant.adapters
+package com.damonkelley.accountant.budget.adapters
 
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent

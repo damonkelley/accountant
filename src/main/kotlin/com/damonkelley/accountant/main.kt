@@ -1,7 +1,7 @@
 package com.damonkelley.accountant
 
-import com.damonkelley.accountant.adapters.serializers.BudgetCommandSerializer
-import com.damonkelley.accountant.adapters.EventStoreBudgetProvider
+import com.damonkelley.accountant.budget.adapters.serializers.BudgetCommandSerializer
+import com.damonkelley.accountant.budget.adapters.EventStoreBudgetProvider
 import com.damonkelley.accountant.budget.application.CreateBudgetHandler
 import com.damonkelley.accountant.budget.domain.BudgetCommand
 import com.damonkelley.accountant.budget.domain.CreateBudget

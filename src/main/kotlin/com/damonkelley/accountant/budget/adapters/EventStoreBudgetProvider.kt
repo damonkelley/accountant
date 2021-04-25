@@ -1,6 +1,6 @@
-package com.damonkelley.accountant.adapters
+package com.damonkelley.accountant.budget.adapters
 
-import com.damonkelley.accountant.adapters.serializers.BudgetEventSerializer
+import com.damonkelley.accountant.budget.adapters.serializers.BudgetEventSerializer
 import com.damonkelley.accountant.budget.domain.Budget
 import com.damonkelley.accountant.budget.domain.BudgetEvent
 import com.damonkelley.accountant.eventsourcing.ExistingAggregateRootProvider

@@ -26,6 +26,7 @@ class Budget(aggregateRoot: WritableAggregateRoot<BudgetEvent>) :
         facts {
             when (it) {
                 is BudgetCreated -> apply(it)
+                else -> Unit
             }
         }
     }

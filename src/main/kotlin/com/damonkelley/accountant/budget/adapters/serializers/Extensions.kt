@@ -1,4 +1,4 @@
-package com.damonkelley.accountant.adapters.serializers
+package com.damonkelley.accountant.budget.adapters.serializers
 
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString

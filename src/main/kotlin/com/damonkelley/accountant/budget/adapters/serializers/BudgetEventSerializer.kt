@@ -1,4 +1,4 @@
-package com.damonkelley.accountant.adapters.serializers
+package com.damonkelley.accountant.budget.adapters.serializers
 
 import com.damonkelley.accountant.budget.domain.BudgetCreated
 import com.damonkelley.accountant.budget.domain.BudgetEvent
