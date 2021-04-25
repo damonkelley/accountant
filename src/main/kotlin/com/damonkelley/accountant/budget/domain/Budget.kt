@@ -17,12 +17,6 @@ class Budget(val aggregateRoot: AggregateRoot<BudgetEvent>) :
     ReadableAggregateRoot<BudgetEvent> by aggregateRoot {
     var name: String = ""
 
-    override fun create(name: String): Budget {
-        aggregateRoot.raise(apply(BudgetCreated(name)))
-
-        return this
-    }
-
     init {
         aggregateRoot.facts {
             when (it) {
@@ -32,14 +26,23 @@ class Budget(val aggregateRoot: AggregateRoot<BudgetEvent>) :
         }
     }
 
+    override fun create(name: String): Budget {
+        return apply { aggregateRoot.raise(apply(BudgetCreated(name))) }
+    }
+
+    override fun rename(name: String): Budget {
+        return apply {
+            aggregateRoot.raise(apply(BudgetRenamed(name)))
+        }
+    }
+
     private fun apply(event: BudgetCreated): BudgetCreated {
         name = event.name
         return event
     }
 
-    override fun rename(name: String): Budget {
-        return apply {
-            aggregateRoot.raise(BudgetRenamed(name))
-        }
+    private fun apply(event: BudgetRenamed): BudgetRenamed {
+        name = event.name
+        return event
     }
 }
