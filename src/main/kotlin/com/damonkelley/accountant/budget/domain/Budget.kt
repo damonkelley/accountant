@@ -1,39 +1,33 @@
 package com.damonkelley.accountant.budget.domain
 
+import com.damonkelley.accountant.account.domain.Account
 import com.damonkelley.accountant.eventsourcing.AggregateRoot
-import com.damonkelley.accountant.eventsourcing.ReadableAggregateRoot
 
-interface Createable {
-    fun create(name: String): Createable
-}
-
-interface Renamable {
-    fun rename(name: String): Renamable
-}
-
-class Budget(val aggregateRoot: AggregateRoot<BudgetEvent>) :
-    Renamable,
-    Createable,
-    ReadableAggregateRoot<BudgetEvent> by aggregateRoot {
+class Budget(private val aggregateRoot: AggregateRoot<BudgetEvent>) :
+    AggregateRoot<BudgetEvent> by aggregateRoot {
     var name: String = ""
 
     init {
         aggregateRoot.facts {
             when (it) {
                 is BudgetCreated -> apply(it)
-                else -> Unit
+                is BudgetRenamed -> apply(it)
             }
         }
     }
 
-    override fun create(name: String): Budget {
+    fun create(name: String): Budget {
         return apply { aggregateRoot.raise(apply(BudgetCreated(name))) }
     }
 
-    override fun rename(name: String): Budget {
+    fun rename(name: String): Budget {
         return apply {
             aggregateRoot.raise(apply(BudgetRenamed(name)))
         }
+    }
+
+    fun addAccount(name: String): Account {
+        return Account().create(name = name, budgetId = id)
     }
 
     private fun apply(event: BudgetCreated): BudgetCreated {

@@ -7,12 +7,12 @@ sealed class BudgetEvent
 
 @Serializable
 data class BudgetCreated(
-        @SerialName("name")
-        val name: String
+    @SerialName("name")
+    val name: String
 ) : BudgetEvent()
 
 @Serializable
 data class BudgetRenamed(
-        @SerialName("name")
-        val name: String
+    @SerialName("name")
+    val name: String
 ) : BudgetEvent()
